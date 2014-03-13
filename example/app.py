@@ -14,12 +14,19 @@ from tornado.web import *
 import psycopg2
 import momoko
 
+from sqlalchemy.orm import sessionmaker
+
 import alchemy
+from alchemy import User
 
 class BaseHandler(RequestHandler):
     @property
     def db(self):
         return self.application.db
+
+    @property
+    def Session(self):
+        return self.application.Session
 
 
 class TutorialHandler(BaseHandler):
@@ -82,6 +89,29 @@ class TutorialHandler4(BaseHandler):
         except Exception as error:
             self.write(str(error))
 
+class SillyHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        try:
+            import random
+            myid = unicode(random.random())
+            session = self.Session()
+
+            user = User(name=u'dav{}'.format(myid),
+                        fullname='dave rino', twitter='davarino')
+            print(user)
+            self.write("<p>")
+            self.write(myid + "\n")
+            self.write("</p>")
+
+            session.add(user)
+            session.commit()
+
+            cursor = yield momoko.Op(self.db.execute, 'SELECT * from users;')
+        except (psycopg2.Warning, psycopg2.Error) as error:
+            self.write(str(error))
+        else:
+            self.write('Results: %r' % (cursor.fetchall(),))
 
 if __name__ == '__main__':
     define("dbname", default="postgres", help="Database name")
@@ -92,18 +122,16 @@ if __name__ == '__main__':
 
     parse_command_line()
 
-    engine = alchemy.create_engine_from_params(options.dbname, options.dbuser,
-                                               options.dbpass, options.dbhost,
-                                               options.dbport)
-
-
     application = Application([
         (r'/', TutorialHandler),
         (r'/2', TutorialHandler2),
         (r'/3', TutorialHandler3),
+        (r'/silly', SillyHandler),
         #(r'/4', TutorialHandler4)
     ], debug=True)
 
+
+    # Set up Momoko
     dsn_template = ('dbname={} user={} password={}'
                     'host={} port={}')
 
@@ -114,6 +142,14 @@ if __name__ == '__main__':
         dsn=dsn,
         size=1
     )
+
+    # Set up SQLAlchemy
+    engine = alchemy.create_engine_from_params(options.dbname, options.dbuser,
+                                               options.dbpass, options.dbhost,
+                                               options.dbport)
+
+    application.engine = engine
+    application.Session = sessionmaker(bind=engine)
 
     http_server = HTTPServer(application)
     http_server.listen(8888, 'localhost')

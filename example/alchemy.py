@@ -20,8 +20,6 @@ from sqlalchemy.orm import sessionmaker
 
 def create_engine_from_params(dbname, user, password, host, port, echo=True):
 
-    Session = sessionmaker()
-
     connection_url_template = (r'postgresql+psycopg2://'
                                r'{user}:{password}@{host}:{port}/{dbname}')
 
