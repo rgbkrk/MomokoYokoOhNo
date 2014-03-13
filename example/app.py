@@ -14,6 +14,7 @@ from tornado.web import *
 import psycopg2
 import momoko
 
+import alchemy
 
 class BaseHandler(RequestHandler):
     @property
@@ -91,11 +92,16 @@ if __name__ == '__main__':
 
     parse_command_line()
 
+    engine = alchemy.create_engine_from_params(options.dbname, options.dbuser,
+                                               options.dbpass, options.dbhost,
+                                               options.dbport)
+
+
     application = Application([
         (r'/', TutorialHandler),
         (r'/2', TutorialHandler2),
         (r'/3', TutorialHandler3),
-        (r'/4', TutorialHandler4)
+        #(r'/4', TutorialHandler4)
     ], debug=True)
 
     dsn_template = ('dbname={} user={} password={}'
