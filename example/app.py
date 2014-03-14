@@ -113,6 +113,19 @@ class SillyHandler(BaseHandler):
         else:
             self.write('Results: %r' % (cursor.fetchall(),))
 
+
+class UserQuery(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        try:
+            session = self.Session()
+            results = session.query(User).filter(User.name.contains('36')).all()
+            self.write(unicode(results))
+        except Exception as e:
+            self.write(str(e))
+        else:
+            self.write("<marquee>Wee Marquee</marquee>")
+
 if __name__ == '__main__':
     define("dbname", default="postgres", help="Database name")
     define("dbuser", default="postgres", help="Postgres user")
@@ -127,7 +140,7 @@ if __name__ == '__main__':
         (r'/2', TutorialHandler2),
         (r'/3', TutorialHandler3),
         (r'/silly', SillyHandler),
-        #(r'/4', TutorialHandler4)
+        (r'/users', UserQuery)
     ], debug=True)
 
 
