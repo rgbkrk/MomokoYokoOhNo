@@ -61,7 +61,8 @@ def bridge_query(query, engine):
     result_proxy = get_result(query, engine)
 
     # TODO: Coerce results into the right model
-    pass
+
+    return result_proxy
 
 def get_result(query, engine):
   # Work with Postgres
@@ -94,4 +95,4 @@ if __name__ == "__main__":
 
     #query = session.query(User)
 
-    bridge_query(query, engine)
+    result = bridge_query(query, engine)
