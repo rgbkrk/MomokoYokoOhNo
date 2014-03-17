@@ -60,9 +60,10 @@ def bridge_query(query, engine):
     '''
     result_proxy = get_result(query, engine)
 
-    # TODO: Coerce results into the right model
-
-    return result_proxy
+    # Coerce results into the right model
+    query_context = query._compile_context()
+    query_context.statement.use_labels = True
+    return sqlalchemy.orm.loading.instances(query, result_proxy, query_context)
 
 def get_result(query, engine):
   # Work with Postgres
@@ -89,6 +90,9 @@ if __name__ == "__main__":
 
     # query without a session
     query = sqlalchemy.orm.query.Query(User, User.name)
+
+    query_context = query._compile_context()
+    query_context.statement.use_labels = True
 
     #Session = sessionmaker(bind=engine)
     #session = Session()
